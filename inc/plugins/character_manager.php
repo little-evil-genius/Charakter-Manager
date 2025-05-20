@@ -106,7 +106,7 @@ function character_manager_install(){
     // Funktion
     $stylesheet = character_manager_stylesheet();
     $sid = $db->insert_query('themestylesheets', $stylesheet);
-    cache_stylesheet(1, "character_manager.css", $stylesheet);
+    cache_stylesheet(1, "character_manager.css", $stylesheet['stylesheet']);
     update_theme_stylesheet_list("1");
 }
  
@@ -126,10 +126,15 @@ function character_manager_uninstall(){
     
 	global $db, $cache;
 
-    //DATENBANKFELD LÖSCHEN
-    if ($db->field_exists("character_manager_alert", "users")) {
-		$db->drop_column("users", "character_manager_alert");
-	}
+    //DATENBANKEN LÖSCHEN
+    if($db->table_exists("character_manager"))
+    {
+        $db->drop_table("character_manager");
+    }
+    if($db->table_exists("character_manager_fields"))
+    {
+        $db->drop_table("character_manager_fields");
+    }
 
     // TEMPLATGRUPPE LÖSCHEN
     $db->delete_query("templategroups", "prefix = 'charactermanager'");
@@ -158,6 +163,9 @@ function character_manager_activate(){
     global $db, $cache;
     
     require MYBB_ROOT."/inc/adminfunctions_templates.php";
+    // VARIABLEN EINFÜGEN
+    find_replace_templatesets('header', '#'.preg_quote('{$bbclosedwarning}').'#', '{$bbclosedwarning}{$character_manager_banner}');
+    find_replace_templatesets('member_profile', '#'.preg_quote('({$usertitle})').'#', '({$usertitle}) {$character_manager_exportLink}');
 }
  
 // Diese Funktion wird aufgerufen, wenn das Plugin deaktiviert wird.
@@ -166,6 +174,10 @@ function character_manager_deactivate(){
     global $db, $cache;
     
     require MYBB_ROOT."/inc/adminfunctions_templates.php";
+
+    // VARIABLEN ENTFERNEN
+	find_replace_templatesets("header", "#".preg_quote('{$character_manager_banner}')."#i", '', 0);
+	find_replace_templatesets("member_profile", "#".preg_quote('{$character_manager_exportLink}')."#i", '', 0);
 }
 
 ######################
@@ -964,7 +976,7 @@ function character_manager_usercp() {
                 $title = $idea['title'];
                 $reminder = $idea['reminder'];
 
-                $fields_query = $db->query("SELECT identification,title FROM " . TABLE_PREFIX . "character_manager_fields ORDER BY disporder ASC, title ASC");
+                $fields_query = $db->query("SELECT identification,title,type FROM " . TABLE_PREFIX . "character_manager_fields ORDER BY disporder ASC, title ASC");
          
                 $fields = "";         
                 while ($field = $db->fetch_array($fields_query)) {
@@ -972,11 +984,19 @@ function character_manager_usercp() {
                     // Leer laufen lassen
                     $identification = "";     
                     $fieldtitle = "";
+                    $type = "";
     
                     // Mit Infos füllen
                     $identification = $field['identification'];
                     $fieldtitle = $field['title'];
-                    $value = $idea[$identification];
+                    $type = $field['type'];
+
+                    if ($type == "multiselect" || $type == "checkbox") {
+                        $valueEx = explode(",", $idea[$identification]);
+                        $value = implode(" & ", $valueEx);
+                    } else {
+                        $value = $idea[$identification];
+                    }
 
                     // Einzelne Variabeln    
                     $characteridea[$identification] = $value;
@@ -1165,6 +1185,10 @@ function character_manager_usercp() {
     // Charakteridee hinzufügen
     if ($mybb->input['action'] == "character_manager_ideas_add") {
 
+        add_breadcrumb($lang->nav_usercp, "usercp.php");
+        add_breadcrumb($lang->character_manager_overview, "usercp.php?action=character_manager");
+        add_breadcrumb($lang->character_manager_ideas_add, "usercp.php?action=character_manager_ideas_add");
+
         $ideas_puplic = $mybb->settings['character_manager_ideas_puplic'];
 
         if(!isset($ideaserrors)){
@@ -1194,6 +1218,10 @@ function character_manager_usercp() {
     // Charakteridee bearbeiten
     if ($mybb->input['action'] == "character_manager_ideas_edit") {
 
+        add_breadcrumb($lang->nav_usercp, "usercp.php");
+        add_breadcrumb($lang->character_manager_overview, "usercp.php?action=character_manager");
+        add_breadcrumb($lang->character_manager_ideas_edit, "usercp.php?action=character_manager_ideas_edit");
+
         $ideas_puplic = $mybb->settings['character_manager_ideas_puplic'];
 
         if(!isset($ideaserrors)){
@@ -1208,9 +1236,11 @@ function character_manager_usercp() {
 
         if ($ideas_puplic == 1) {
             $extrainfos = $mybb->get_input('extrainfos');
+            $puplic_button = "<input type=\"submit\" class=\"button\" name=\"ideapublic\" value=\"{$lang->character_manager_ideas_form_button_public}\" />";
             eval("\$puplic_field = \"".$templates->get("charactermanager_ideas_form_puplic")."\";");
         } else {
             $puplic_field = "";
+            $puplic_button = "";
         }
 
         $lang->charactermanager_ideas_form = $lang->character_manager_ideas_edit;
@@ -1330,11 +1360,14 @@ function character_manager_usercp() {
             // Accountsswichter
             require_once MYBB_ROOT.'/inc/plugins/accountswitcher/class_accountswitcher.php';
             $eas = new AccountSwitcher($mybb, $db, $cache, $templates);
-            $eas->update_accountswitcher_cache();
+
             $as_update = array(
                 "as_uid" => (int)$mainChara['uid']
             );            
             $db->update_query("users", $as_update, "uid = ".$uid);
+
+            $eas->update_accountswitcher_cache();
+            $eas->update_userfields_cache();
 
             // Katjas Steckbriefplugin => Felder hinzufügen
             if ($db->table_exists("application_ucp_userfields")) {
@@ -1366,6 +1399,7 @@ function character_manager_usercp() {
     if ($mybb->input['action'] == "character_manager_registration") {
 
 		add_breadcrumb($lang->nav_usercp, "usercp.php");
+        add_breadcrumb($lang->character_manager_overview, "usercp.php?action=character_manager");
         add_breadcrumb($lang->character_manager_registration, "usercp.php?action=character_manager_registration");
 
         $required_setting = $mybb->settings['character_manager_required'];
@@ -1374,6 +1408,16 @@ function character_manager_usercp() {
         $adopt_setting = $mybb->settings['character_manager_adopt'];
         $adopt_fields = str_replace(", ", ",", $mybb->settings['character_manager_adopt_fields']);
         $adopt_fields = explode(",", $adopt_fields);
+
+        // Hauptcharakter
+        if ($mybb->user['as_uid'] != 0) {
+            $mainUID = intval($mybb->user['as_uid']);
+            $mastername = $db->fetch_field($db->simple_select("users", "username", "uid = ".$mainUID), "username");
+        } else {
+            $mastername = $mybb->user['username'];
+            $mainUID = $mybb->user['uid'];
+        }
+        $mastercharacter = $lang->sprintf($lang->character_manager_registration_masteraccount, $mastername);
 
         // MyBB verpflichtend
         $required_profilefields = $db->simple_select("profilefields", "fid", "required = 1");
@@ -1397,11 +1441,11 @@ function character_manager_usercp() {
             foreach($required_fields as $requiredfield) {
                 // Profilfeld
                 if (is_numeric($requiredfield)) {
-                    $requiredfields .= character_manager_profilefields($requiredfield, $userID);
+                    $requiredfields .= character_manager_profilefields($requiredfield, $mainUID);
                 } 
                 // Steckifeld
                 else {
-                    $requiredfields .= character_manager_applicationfields($requiredfield, $userID);
+                    $requiredfields .= character_manager_applicationfields($requiredfield, $mainUID);
                 }
             }
         } else {
@@ -1415,29 +1459,22 @@ function character_manager_usercp() {
             foreach($adopt_fields as $adoptfield) {
                 // Profilfeld
                 if (is_numeric($adoptfield)) {
-                    $adoptfields .= character_manager_profilefields($adoptfield, $userID);
+                    $adoptfields .= character_manager_profilefields($adoptfield, $mainUID);
                 } 
                 // Steckifeld
                 else {
-                    $adoptfields .= character_manager_applicationfields($adoptfield, $userID);
+                    $adoptfields .= character_manager_applicationfields($adoptfield, $mainUID);
                 }
             }
         } else {
             $adoptfields = "";
         }
 
-        // Hauptcharakter
-        if ($mybb->user['as_uid'] != 0) {
-            $asUid = intval($mybb->user['as_uid']);
-            $mastername = $db->fetch_field($db->simple_select("users", "username", "uid = ".$asUid), "username");
-        } else {
-            $mastername = $mybb->user['username'];
-        }
-        $mastercharacter = $lang->sprintf($lang->character_manager_registration_masteraccount, $mastername);
-
         if(!isset($regerrors)){
             $regerrors = "";
         }
+
+        $username = $mybb->get_input('username');
 
 		eval("\$page = \"".$templates->get("charactermanager_registration")."\";");
 		output_page($page);
@@ -1812,7 +1849,7 @@ function character_manager_profilefields($input_fid, $uid) {
         $adoptfields = explode(",", $adoptfields);
     }
 
-    $fieldQuery = $db->query("SELECT fid, name, description, type FROM ".TABLE_PREFIX."profilefields 
+    $fieldQuery = $db->query("SELECT fid, name, description, type, length FROM ".TABLE_PREFIX."profilefields 
     WHERE fid = ".$input_fid."
     ");
 
@@ -1822,13 +1859,15 @@ function character_manager_profilefields($input_fid, $uid) {
         $fid = $field['fid'];
         $name = $field['name'];
         $description = $field['description'];
+        $length = $field['length'];
+        $adopt = 0;
         $options = explode("\n", $field['type']); 
         $type = $options[0];  
 
         if ($type == "select" || $type == "multiselect" || $type == "radio" || $type == "checkbox") {
             unset($options[0]);
         }
-
+                
         if (!empty($mybb->settings['character_manager_adopt_fields'])) {
             if (in_array($fid, $adoptfields)) {
                 $fieldFID = "fid".$fid;
@@ -1839,15 +1878,28 @@ function character_manager_profilefields($input_fid, $uid) {
                 } else {
                     $value = $db->fetch_field($db->simple_select("userfields", $fieldFID, "ufid = ".$uid.""), $fieldFID);
                 }
+                $adopt = 1;
+            } else {
+                $inputfields = $mybb->get_input('profile_fields', MyBB::INPUT_ARRAY);
+                if (!empty($inputfields)) {
+                    $fieldFID = "fid".$fid;
+                    $value = $inputfields[$fieldFID];
+                } else {
+                    $value = "";
+                }
+            }
+        } else {
+            $inputfields = $mybb->get_input('profile_fields', MyBB::INPUT_ARRAY);
+            if (!empty($inputfields)) {
+                $fieldFID = "fid".$fid;
+                $value = $inputfields[$fieldFID];
             } else {
                 $value = "";
             }
-        } else {
-            $value = "";
         }
 
         // INPUTS generieren
-        $code = character_manager_generate_input_field('reg', $fid, $type, $value, $options);
+        $code = character_manager_generate_input_field('reg', $fid, $type, $value, $options, $length, $adopt);
 
         eval("\$profilefields .= \"".$templates->get("charactermanager_registration_fields")."\";");
     }
@@ -1878,15 +1930,23 @@ function character_manager_applicationfields($input_name, $uid) {
         $options = str_replace(", ", ",", $field['options']); 
         $options = explode(",", $options); 
         $type = $field['fieldtyp'];  
+        $length = 0;
+        $adopt = 0;
 
         if (in_array($input_name, $adoptfields)) {
             $value = $db->fetch_field($db->simple_select("application_ucp_userfields", "value", "uid = ".$uid." AND fieldid = ".$id.""), "value");
+            $adopt = 1;
         } else {
-            $value = "";
+            $inputfields = $mybb->get_input('application_fields', MyBB::INPUT_ARRAY);
+            if ($type == "select_multiple" || $type == "checkbox") {
+                $value = $inputfields[$input_name];
+            } else {
+                $value = $inputfields[$input_name];
+            }
         }
 
         // INPUTS generieren
-        $code = character_manager_generate_input_field('reg', $input_name, $type, $value, $options);
+        $code = character_manager_generate_input_field('reg', $input_name, $type, $value, $options, $length, $adopt);
 
         eval("\$applicationfields .= \"".$templates->get("charactermanager_registration_fields")."\";");
     }
@@ -1910,7 +1970,7 @@ function character_manager_generate_fields($draft = null, $input_data = null) {
         $title = $field['title'];
         $description = $field['description'];
         $type = $field['type'];
-        $options = $field['options'];
+        $options = explode("\n", $field['options']); 
 
         if ($input_data) {
             if ($type == "multiselect" || $type == "checkbox") {
@@ -1934,7 +1994,7 @@ function character_manager_generate_fields($draft = null, $input_data = null) {
 }
 
 // INPUT FELDER GENERIEN
-function character_manager_generate_input_field($mode = '', $identification, $type, $value = '', $expoptions = []) {
+function character_manager_generate_input_field($mode = '', $identification, $type, $value = '', $expoptions = [], $length = 0, $adopt = '') {
 
     $input = '';
     if ($mode == 'reg') {
@@ -1947,7 +2007,7 @@ function character_manager_generate_input_field($mode = '', $identification, $ty
             $identification = "application_fields[".$identification."]";
         }
 
-        if (!empty($value)) {
+        if (!empty($adopt)) {
             if ($type == "text" || $type == "textarea") {
                 $unchangeable = "readonly";
             } else {
@@ -1976,33 +2036,52 @@ function character_manager_generate_input_field($mode = '', $identification, $ty
                 $input .= '<input type="radio" name="'.htmlspecialchars($identification).'" value="' . htmlspecialchars($option) . '" '.$unchangeable.$checked.'>';
                 $input .= '<span class="smalltext">' . htmlspecialchars($option) . '</span><br />';
             }
+            if (!empty($adopt) && $unchangeable == "disabled") {
+                $input .= '<input type="hidden" name="'.htmlspecialchars($identification).'" value="' . htmlspecialchars($value) . '">';
+            }
             break;
 
         case 'select':
-            $input = '<select name="'.htmlspecialchars($identification).'">';
+            $input = '<select name="'.htmlspecialchars($identification).'" size="'.$length.'" '.$unchangeable.'>';
             foreach ($expoptions as $option) {
                 $selected = ($option == $value) ? ' selected' : '';
-                $input .= '<option value="' . htmlspecialchars($option) . '"'.$unchangeable.$selected . '>' . htmlspecialchars($option) . '</option>';
+                $input .= '<option value="' . htmlspecialchars($option) . '"'.$selected . '>' . htmlspecialchars($option) . '</option>';
             }
             $input .= '</select>';
+            if (!empty($adopt) && $unchangeable == "disabled") {
+                $input .= '<input type="hidden" name="'.htmlspecialchars($identification).'" value="' . htmlspecialchars($value) . '">';
+            }
             break;
 
         case 'multiselect':
             $value = is_array($value) ? $value : explode(',', $value);
-            $input = '<select name="'.htmlspecialchars($identification).'[]" multiple>';
+            $input = '<select name="'.htmlspecialchars($identification).'[]" multiple="multiple" size="'.$length.'" '.$unchangeable.'>';
             foreach ($expoptions as $option) {
                 $selected = in_array($option, $value) ? ' selected' : '';
-                $input .= '<option value="' . htmlspecialchars($option) . '"'.$unchangeable.$selected . '>' . htmlspecialchars($option) . '</option>';
+                $input .= '<option value="' . htmlspecialchars($option) . '"'.$selected . '>' . htmlspecialchars($option) . '</option>';
             }
             $input .= '</select>';
+
+            if (!empty($adopt) && $unchangeable == "disabled") {
+                foreach ($value as $val) {
+                    $input .= '<input type="hidden" name="'.htmlspecialchars($identification).'[]" value="' . htmlspecialchars($val) . '">';
+                }
+            }
             break;
 
         case 'checkbox':
             $value = is_array($value) ? $value : explode(',', $value);
+            $input_html = "";
             foreach ($expoptions as $option) {
                 $checked = in_array($option, $value) ? ' checked' : '';
-                $input .= '<input type="checkbox" name="'.htmlspecialchars($identification).'[]" value="' . htmlspecialchars($option) . '"'.$unchangeable.$checked . '>';
-                $input .= '<span class="smalltext">' . htmlspecialchars($option) . '</span><br />';
+                $input_html .= '<input type="checkbox" name="'.htmlspecialchars($identification).'[]" value="' . htmlspecialchars($option) . '"'.$unchangeable.$checked . '>';
+                $input_html .= '<span class="smalltext">' . htmlspecialchars($option) . '</span><br />';
+            }
+            $input .= $input_html;
+            if (!empty($adopt) && $unchangeable == "disabled") {
+                foreach ($value as $val) {
+                    $input .= '<input type="hidden" name="'.htmlspecialchars($identification).'[]" value="' . htmlspecialchars($val) . '">';
+                }
             }
             break;
 
@@ -2017,7 +2096,10 @@ function character_manager_generate_input_field($mode = '', $identification, $ty
 // CHARAKTERIDEE POST BAUEN
 function character_manager_idea_post(){
 
-    global $mybb, $db, $templates;
+    global $mybb, $db, $templates, $lang;
+    
+    // SPRACHDATEI LADEN
+    $lang->load("character_manager");
 
     $message = "";
 
@@ -2271,7 +2353,7 @@ function character_manager_templates($mode = '') {
 							<td class="thead" colspan="2">
 								<strong>{$lang->character_manager_overview}</strong>
 								<span class="float_right">
-									<a href="usercp.php?action=character_manager_registration" class="character_manager_button">{character_manager_registration_link}</a>
+									<a href="usercp.php?action=character_manager_registration" class="character_manager_button">{$lang->character_manager_registration_link}</a>
 								</span>
 							</td>
 						</tr>
@@ -2344,7 +2426,7 @@ function character_manager_templates($mode = '') {
     $templates[] = array(
         'title'		=> 'charactermanager_ideas_character',
         'template'	=> $db->escape_string('<div class="character_manager_ideas_bit-chara">
-        <div class="character_manager_ideas_bit-item">{$title} {$optionDel} {$optionEdit}</div>
+        <div class="character_manager_ideas_bit-item">{$title} <span class="float_right">{$optionDel} {$optionEdit}</span></div>
         {$fields}
         </div>'),
         'sid'		=> '-2',
@@ -2384,7 +2466,7 @@ function character_manager_templates($mode = '') {
 							
 							<tr>
 								<td class="trow1" colspan="2" align="center">
-									<span class="smalltext">{$lang->character_manager_ideas_notice}</span>
+									<span class="smalltext">{$lang->character_manager_ideas_form_notice}</span>
 								</td>
 							</tr>
 
@@ -2556,7 +2638,7 @@ function character_manager_templates($mode = '') {
         'title'		=> 'charactermanager_registration_fields',
         'template'	=> $db->escape_string('<tr>
         <td>
-		{$name}
+		<strong>{$name}</strong>
 		<br />
 		<span class="smalltext">{$description}</span>
         </td>
@@ -2672,8 +2754,16 @@ function character_manager_stylesheet() {
         }
 
         .character_manager_ideas_bit-chara {
-        padding: 5px 0;
-        border-bottom: 1px solid #ddd;
+        margin: 10px 0 0 0;
+        }
+        
+        .character_manager_ideas_bit-title {
+        border-bottom: 2px solid #ddd;
+        font-weight: bold;
+        }
+
+        .character_manager_ideas_bit-item {
+        font-size: 11px;
         }',
 		'cachefile' => 'character_manager.css',
 		'lastmodified' => TIME_NOW
