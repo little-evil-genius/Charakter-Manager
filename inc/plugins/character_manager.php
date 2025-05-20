@@ -1379,7 +1379,7 @@ function character_manager_usercp() {
                         $value = implode(',', array_map('trim', $value));         
                     }
          
-                    $fieldid = $db->fetch_field($db->simple_select("application_ucp_fieldss", "id", "fieldname = '".$field."'"), "id");
+                    $fieldid = $db->fetch_field($db->simple_select("application_ucp_fields", "id", "fieldname = '".$field."'"), "id");
 
                     $insert_array = [
                         'uid' => (int)$uid,
@@ -1435,8 +1435,8 @@ function character_manager_usercp() {
         }
 
         // verpflichtenden Angaben
-        if ($required_setting == 1) {
-
+        if (!empty($required_fields)) {
+                
             $requiredfields = "";
             foreach($required_fields as $requiredfield) {
                 // Profilfeld
@@ -1446,28 +1446,34 @@ function character_manager_usercp() {
                 // Steckifeld
                 else {
                     $requiredfields .= character_manager_applicationfields($requiredfield, $mainUID);
-                }
+                }   
             }
         } else {
             $requiredfields = "";
+            $displayrequiredfields = 'style="display: none;"';
         }
 
         // übernommene Angaben
         if ($adopt_setting == 1) {
 
             $adoptfields = "";
-            foreach($adopt_fields as $adoptfield) {
-                // Profilfeld
-                if (is_numeric($adoptfield)) {
-                    $adoptfields .= character_manager_profilefields($adoptfield, $mainUID);
-                } 
-                // Steckifeld
-                else {
-                    $adoptfields .= character_manager_applicationfields($adoptfield, $mainUID);
+            if (empty($required_fields)) {
+                $displayadoptfields = 'style="display: none;"';
+            } else {
+                foreach($adopt_fields as $adoptfield) {
+                    // Profilfeld
+                    if (is_numeric($adoptfield)) {
+                        $adoptfields .= character_manager_profilefields($adoptfield, $mainUID);
+                    } 
+                    // Steckifeld
+                    else {
+                        $adoptfields .= character_manager_applicationfields($adoptfield, $mainUID);
+                    }
                 }
             }
         } else {
             $adoptfields = "";
+            $displayadoptfields = 'style="display: none;"';
         }
 
         if(!isset($regerrors)){
@@ -1933,15 +1939,24 @@ function character_manager_applicationfields($input_name, $uid) {
         $length = 0;
         $adopt = 0;
 
-        if (in_array($input_name, $adoptfields)) {
-            $value = $db->fetch_field($db->simple_select("application_ucp_userfields", "value", "uid = ".$uid." AND fieldid = ".$id.""), "value");
-            $adopt = 1;
+        if (!empty($mybb->settings['character_manager_adopt_fields'])) {
+            if (in_array($input_name, $adoptfields)) {
+                $value = $db->fetch_field($db->simple_select("application_ucp_userfields", "value", "uid = ".$uid." AND fieldid = ".$id.""), "value");
+                $adopt = 1;
+            } else {
+                $inputfields = $mybb->get_input('application_fields', MyBB::INPUT_ARRAY);
+                if (!empty($inputfields)) {
+                    $value = $inputfields[$input_name];
+                } else {
+                    $value = "";
+                }
+            }
         } else {
             $inputfields = $mybb->get_input('application_fields', MyBB::INPUT_ARRAY);
-            if ($type == "select_multiple" || $type == "checkbox") {
+            if (!empty($inputfields)) {
                 $value = $inputfields[$input_name];
             } else {
-                $value = $inputfields[$input_name];
+                $value = "";
             }
         }
 
@@ -2583,7 +2598,7 @@ function character_manager_templates($mode = '') {
 												<td colspan="2"><span class="smalltext"><label for="username">{$lang->character_manager_registration_username}</label></span></td>
 											</tr>
 											<tr>
-												<td colspan="2"><input type="text" class="textbox" name="username" id="username" style="width: 100%" value="" /></td>
+												<td colspan="2"><input type="text" class="textbox" name="username" id="username" style="width: 100%" value="{$username}" /></td>
 											</tr>
 											<tr>
 												<td width="50%" valign="top"><span class="smalltext">{$lang->character_manager_registration_password}</span></td>
@@ -2598,7 +2613,7 @@ function character_manager_templates($mode = '') {
 								</td>
 							</tr>
 							<tr>
-								<td width="50%" class="trow1" valign="top">
+								<td width="50%" class="trow1" valign="top" {$displayrequiredfields}>
 									<fieldset>
 										<legend><strong>{$lang->character_manager_registration_requiredfields}</strong></legend>
 										<table cellspacing="0" cellpadding="{$theme[\'tablespace\']}" width="50">
@@ -2606,7 +2621,7 @@ function character_manager_templates($mode = '') {
 										</table>
 									</fieldset>
 								</td>
-								<td width="50%" class="trow1" valign="top">
+								<td width="50%" class="trow1" valign="top" {$displayadoptfields}>
 									<fieldset>
 										<legend><strong>{$lang->character_manager_registration_adoptfields}</strong></legend>
 										<span class="smalltext">{$lang->character_manager_registration_adoptfields_desc}</span>
