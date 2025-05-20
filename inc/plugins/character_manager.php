@@ -2248,7 +2248,7 @@ function character_manager_settings($type = 'install') {
 			'title' => 'Charakterideen',
             'description' => 'Dürfen User:innen eine Art Notizbuch für Charakterideen erstellen?',
             'optionscode' => 'yesno',
-            'value' => '1', // Default
+            'value' => '0', // Default
             'disporder' => 9
 		),
         'character_manager_ideas_reminder' => array(
@@ -2262,7 +2262,7 @@ function character_manager_settings($type = 'install') {
 			'title' => 'Charakterideen veröffentlichen',
             'description' => 'Solle es die Option geben, das Charakterideen als eigenes öffentliche Thema automatisch gepostet werden?',
             'optionscode' => 'yesno',
-            'value' => '1', // Default
+            'value' => '0', // Default
             'disporder' => 11
 		),
         'character_manager_ideas_puplic_forum' => array(
