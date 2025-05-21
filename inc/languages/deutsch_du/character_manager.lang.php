@@ -11,13 +11,15 @@ $l['character_manager_ideas_form_title'] = "Arbeitstitel";
 $l['character_manager_ideas_form_title_desc'] = "Gib hier ein Arbeitstitel oder schon ein festen Charaktername für diese Idee an.";
 $l['character_manager_ideas_form_extrainfos'] = "Sonstige Informationen";
 $l['character_manager_ideas_form_extrainfos_desc'] = "Falls du das Thema veröffentlichen möchtest, kannst du hier noch weitere Informationen unterbringen. Was für Anschluss du suchst? Eine persönliche Nachricht?";
+$l['character_manager_ideas_form_prefix'] = "Threadpräfix";
+$l['character_manager_ideas_form_prefix_desc'] = "Für diesen Bereich im Forum ist ein Präfix erforderlich. Wähle entsprechend aus.";
 $l['character_manager_ideas_form_button_privat'] = "Charakteridee erstellen";
 $l['character_manager_ideas_form_button_public'] = "Charakteridee veröffentlichen";
 $l['character_manager_ideas_banner'] = "Hast du noch Interesse an {1} Charakteridee{2}:";
 $l['character_manager_ideas_post_extra'] = "Sonstiges:";
-$l['character_manager_ideas_edit'] = "E";
-$l['character_manager_ideas_delete'] = "X";
-$l['character_manager_ideas_delete_notice'] = "Wirklich löschen?";
+$l['character_manager_ideas_link_edit'] = "E";
+$l['character_manager_ideas_link_delete'] = "X";
+$l['character_manager_ideas_delete_notice'] = "Soll die Charakteridee wirklich gelöscht werden?";
 $l['character_manager_ideas_none'] = "Aktuell hast du keine Charakterideen hinterlegt.";
 
 $l['character_manager_registration'] = "Neuen Charakter erstellen";
@@ -42,7 +44,7 @@ $l['character_manager_redirect_extend'] = "Deine Charakteridee wurde erfolgreich
 $l['character_manager_redirect_newthread'] = "Vielen Dank, dein Thema wurde veröffentlicht.";
 $l['character_manager_redirect_registration'] = "Herzlichen Glückwunsch, dein neuer Charakter wurde erstellt.";
 
-$l['character_manager_online_location'] = "Schaut sich die <a href=\"link\">persönliche Charakterübersicht</a> im Usercp an.";
+$l['character_manager_online_location'] = "Schaut sich die <a href=\"usercp.php?action=character_manager\">persönliche Charakterübersicht</a> im Usercp an.";
 $l['character_manager_online_location_registration'] = "Erstellt gerade ein weiteren Charakter im Usercp.";
 $l['character_manager_online_location_ideas_add'] = "Erstellt gerade eine neue Charakteridee im Usercp.";
 $l['character_manager_online_location_ideas_edit'] = "Bearbeitet gerade eineCharakteridee im Usercp.";
