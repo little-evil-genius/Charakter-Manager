@@ -898,10 +898,10 @@ function character_manager_usercp() {
         $characters = character_manager_get_allchars($userID);
 
         $characters_bit = "";
+        $character = [];
         foreach($characters as $characterUID => $charactername) {
 
             // Leer laufen lassen
-            $character = "";
             $avatarUrl = "";
             $characternameFormated = "";
             $characternameLink = ""; 
@@ -912,6 +912,9 @@ function character_manager_usercp() {
 
             // Profilfelder & Users Tabelle
             $character = get_user($characterUID);
+            $query = $db->simple_select("userfields", "*", "ufid = ".$characterUID);
+            $userfields = $db->fetch_array($query);
+            $character = array_merge($character, $userfields);
 
             // Avatar
             if (!empty($character['avatar'])) {
