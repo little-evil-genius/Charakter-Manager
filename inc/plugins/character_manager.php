@@ -934,18 +934,18 @@ function character_manager_usercp() {
 
             // Steckbrieffelder
             if ($db->table_exists("application_ucp_fields")) {
-		if (!function_exists('application_ucp_build_view')) {
+                if (!function_exists('application_ucp_build_view')) {
                     require_once MYBB_ROOT . 'inc/plugins/application_ucp.php';
-		}
+                }
                 $applicationfields = application_ucp_build_view($characterUID, "profile", "array");
                 $character = array_merge($character, $applicationfields);
             }
 
             // Uploadsystem
             if ($db->table_exists("uploadsystem")) {
-		if (!function_exists('uploadsystem_build_view')) {
+                if (!function_exists('uploadsystem_build_view')) {
                     require_once MYBB_ROOT . 'inc/plugins/uploadsystem.php';
-		}
+                }
                 $uploadfields = uploadsystem_build_view($characterUID);
                 $character = array_merge($character, $uploadfields);
             }
@@ -1013,8 +1013,8 @@ function character_manager_usercp() {
                 }
 
                 // Optionen => löschen & bearbeiten
-                $optionDel = "<a href=\"usercp.php?action=character_manager_ideas_delete&cid=".$cid."\" onClick=\"return confirm('".$lang->character_manager_ideas_delete_notice."');\">".$lang->character_manager_ideas_delete."</a>";
-                $optionEdit = "<a href=\"usercp.php?action=character_manager_ideas_edit&cid=".$cid."\">".$lang->character_manager_ideas_edit."</a>";
+                $optionDel = "<a href=\"usercp.php?action=character_manager_ideas_delete&cid=".$cid."\" onClick=\"return confirm('".$lang->character_manager_ideas_delete_notice."');\">".$lang->character_manager_ideas_link_delete."</a>";
+                $optionEdit = "<a href=\"usercp.php?action=character_manager_ideas_edit&cid=".$cid."\">".$lang->character_manager_ideas_link_edit."</a>";
 
                 eval("\$ideas_bit .= \"".$templates->get("charactermanager_ideas_character")."\";");
             }
@@ -1088,7 +1088,7 @@ function character_manager_usercp() {
                 $new_thread = array(
                     "fid" => $forum_fid,
                     "subject" => $mybb->get_input('title'),
-                    "prefix" => (int)0,
+                    "prefix" => (int)$mybb->get_input('threadprefix'),
                     "icon" => (int)0,
                     "uid" => $mybb->user['uid'],
                     "username" => $mybb->user['username'],
@@ -1208,13 +1208,22 @@ function character_manager_usercp() {
         if ($ideas_puplic == 1) {
             $extrainfos = $mybb->get_input('extrainfos');
             $puplic_button = "<input type=\"submit\" class=\"button\" name=\"ideapublic\" value=\"{$lang->character_manager_ideas_form_button_public}\" />";
+
+            $threadprefix = character_manager_threadprefixes();
+            if (!empty($threadprefix)) {
+                eval("\$prefix_field = \"".$templates->get("charactermanager_ideas_form_prefix")."\";");
+            } else {
+                $prefix_field = "";
+            }
+
             eval("\$puplic_field = \"".$templates->get("charactermanager_ideas_form_puplic")."\";");
         } else {
             $puplic_field = "";
+            $prefix_field = "";
             $puplic_button = "";
         }
 
-        $lang->charactermanager_ideas_form = $lang->character_manager_ideas_add;
+        $lang->charactermanager_ideas_form = $lang->character_manager_ideas_add; 
 
 		eval("\$page = \"".$templates->get("charactermanager_ideas_form")."\";");
 		output_page($page);
@@ -1243,10 +1252,19 @@ function character_manager_usercp() {
         if ($ideas_puplic == 1) {
             $extrainfos = $mybb->get_input('extrainfos');
             $puplic_button = "<input type=\"submit\" class=\"button\" name=\"ideapublic\" value=\"{$lang->character_manager_ideas_form_button_public}\" />";
+            
+            $threadprefix = character_manager_threadprefixes();
+            if (!empty($threadprefix)) {
+                eval("\$prefix_field = \"".$templates->get("charactermanager_ideas_form_prefix")."\";");
+            } else {
+                $prefix_field = "";
+            }
+
             eval("\$puplic_field = \"".$templates->get("charactermanager_ideas_form_puplic")."\";");
         } else {
             $puplic_field = "";
             $puplic_button = "";
+            $prefix_field = "";
         }
 
         $lang->charactermanager_ideas_form = $lang->character_manager_ideas_edit;
@@ -1911,7 +1929,7 @@ function character_manager_profilefields($input_fid, $uid) {
         }
 
         // INPUTS generieren
-        $code = character_manager_generate_input_field('reg', $fid, $type, $value, $options, $length, $adopt);
+        $code = character_manager_generate_input_field($fid, $type, 'reg', $value, $options, $length, $adopt);
 
         eval("\$profilefields .= \"".$templates->get("charactermanager_registration_fields")."\";");
     }
@@ -1967,7 +1985,7 @@ function character_manager_applicationfields($input_name, $uid) {
         }
 
         // INPUTS generieren
-        $code = character_manager_generate_input_field('reg', $input_name, $type, $value, $options, $length, $adopt);
+        $code = character_manager_generate_input_field($input_name, $type, 'reg', $value, $options, $length, $adopt);
 
         eval("\$applicationfields .= \"".$templates->get("charactermanager_registration_fields")."\";");
     }
@@ -2006,7 +2024,7 @@ function character_manager_generate_fields($draft = null, $input_data = null) {
         }
 
         // INPUTS generieren
-        $code = character_manager_generate_input_field('ideas', $identification, $type, $value, $options);
+        $code = character_manager_generate_input_field($identification, $type, 'ideas', $value, $options);
 
         eval("\$own_fields .= \"".$templates->get("charactermanager_ideas_form_fields")."\";");
     }
@@ -2015,7 +2033,7 @@ function character_manager_generate_fields($draft = null, $input_data = null) {
 }
 
 // INPUT FELDER GENERIEN
-function character_manager_generate_input_field($mode = '', $identification, $type, $value = '', $expoptions = [], $length = 0, $adopt = '') {
+function character_manager_generate_input_field($identification, $type, $mode = '', $value = '', $expoptions = [], $length = 0, $adopt = '') {
 
     $input = '';
     if ($mode == 'reg') {
@@ -2112,6 +2130,43 @@ function character_manager_generate_input_field($mode = '', $identification, $ty
     }
 
     return $input;
+}
+
+// THREADPRÄFIX 
+function character_manager_threadprefixes() {
+
+    global $mybb, $db;
+
+    $forum_fid = $mybb->settings['character_manager_ideas_puplic_forum'];
+
+    // Präfix
+    $prefixes_query = $db->query("SELECT pid, prefix FROM ".TABLE_PREFIX."threadprefixes
+    WHERE (concat(',',forums,',') LIKE '%,".$forum_fid.",%')
+    ORDER BY prefix ASC
+    ");
+
+    $allprefixes = [];
+    while ($prefixes = $db->fetch_array($prefixes_query)) {
+        $pid = "";
+        $prefix = "";
+
+        $pid = $prefixes['pid'];
+        $prefix = $prefixes['prefix'];
+
+        $allprefixes[$pid] = $prefix;
+    }
+
+    if (!empty($allprefixes)) {
+        $threadprefix = "<select name=\"threadprefix\"><option value=\"0\">Kein Präfix</option>";
+        foreach ($allprefixes as $pid => $prefix) {
+            $threadprefix .= "<option value=\"".$pid."\">".$prefix."</option>";
+        }
+        $threadprefix .= "</select>";
+    } else {
+        $threadprefix = "";
+    }
+
+    return $threadprefix;
 }
 
 // CHARAKTERIDEE POST BAUEN
@@ -2541,6 +2596,21 @@ function character_manager_templates($mode = '') {
     );
 
     $templates[] = array(
+        'title'		=> 'charactermanager_ideas_form_prefix',
+        'template'	=> $db->escape_string('<tr>
+        <td class="trow1" width="30%"><strong>{$lang->character_manager_ideas_form_prefix}</strong>
+        <div class="smalltext">{$lang->character_manager_ideas_form_prefix_desc}</div>
+        </td>
+        <td class="trow1">
+        {$threadprefix}	
+        </td>
+        </tr>'),
+        'sid'		=> '-2',
+        'version'	=> '',
+        'dateline'	=> TIME_NOW
+    );
+
+    $templates[] = array(
         'title'		=> 'charactermanager_ideas_form_puplic',
         'template'	=> $db->escape_string('<tr>
         <td class="trow1" width="30%"><strong>{$lang->character_manager_ideas_form_extrainfos}</strong>
@@ -2551,7 +2621,8 @@ function character_manager_templates($mode = '') {
 			<textarea name="extrainfos" rows="6" cols="42">{$extrainfos}</textarea>
 		</span>		
         </td>
-        </tr>'),
+        </tr>
+        {$prefix_field}'),
         'sid'		=> '-2',
         'version'	=> '',
         'dateline'	=> TIME_NOW
@@ -2814,8 +2885,9 @@ function character_manager_is_updated(){
 
     global $db, $mybb;
 
-    if ($db->table_exists("character_manager")) {
-        return true;
+    $template = $db->fetch_field($db->simple_select("templates", "tid", "title = 'charactermanager_ideas_form_prefix'"),"tid");
+
+    if (!$template) {
+        return false;
     }
-    return false;
 }
