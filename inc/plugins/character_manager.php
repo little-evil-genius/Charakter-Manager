@@ -912,8 +912,8 @@ function character_manager_usercp() {
 
             // Profilfelder & Users Tabelle
             $character = get_user($characterUID);
-            $query = $db->simple_select("userfields", "*", "ufid = ".$characterUID);
-            $userfields = $db->fetch_array($query);
+            $userfields_query = $db->simple_select("userfields", "*", "ufid = ".$characterUID);
+            $userfields = $db->fetch_array($userfields_query);
             $character = array_merge($character, $userfields);
 
             // Avatar
