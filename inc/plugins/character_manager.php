@@ -934,12 +934,18 @@ function character_manager_usercp() {
 
             // Steckbrieffelder
             if ($db->table_exists("application_ucp_fields")) {
+		if (!function_exists('application_ucp_build_view')) {
+                    require_once MYBB_ROOT . 'inc/plugins/application_ucp.php';
+		}
                 $applicationfields = application_ucp_build_view($characterUID, "profile", "array");
                 $character = array_merge($character, $applicationfields);
             }
 
             // Uploadsystem
             if ($db->table_exists("uploadsystem")) {
+		if (!function_exists('uploadsystem_build_view')) {
+                    require_once MYBB_ROOT . 'inc/plugins/uploadsystem.php';
+		}
                 $uploadfields = uploadsystem_build_view($characterUID);
                 $character = array_merge($character, $uploadfields);
             }
