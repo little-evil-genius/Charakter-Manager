@@ -1520,6 +1520,10 @@ function character_manager_usercp() {
         $export_setting = $mybb->settings['character_manager_export'];
         if ($export_setting == 0) return;
 
+        if (!ob_get_level()) {
+            ob_start();
+        }
+
         $uid = $mybb->get_input('uid', MyBB::INPUT_INT);
         if (empty($uid)) return;
         $userIDs = character_manager_get_allchars($uid);
@@ -1554,9 +1558,10 @@ function character_manager_usercp() {
                 $exportFID = "fid".$exportfield;
                 $fieldvalue = $db->fetch_field($db->simple_select("userfields", $exportFID, "ufid = ".$uid), $exportFID);
                 $fieldvalue = $parser->parse_message($fieldvalue, $parser_array);
+                $fieldvalue = character_manager_clean_html($fieldvalue);
 
-                if (trim($fieldvalue) === '') {
-                    continue;
+                if (trim(strip_tags($fieldvalue)) === '') {
+                    $fieldvalue = '<em>(Keine Angaben)</em>';
                 }
 
                 $inhalt .= "
@@ -1661,9 +1666,6 @@ function character_manager_usercp() {
  
         // Fügt den HTML Code in das PDF Dokument ein       
         $pdf->writeHTML($html, true, false, true, false, '');
-
-        // Clean any content of the output buffer
-        ob_end_clean();
  
         //Ausgabe der PDF
         //Variante 1: PDF direkt an den Benutzer senden:
@@ -2170,6 +2172,22 @@ function character_manager_threadprefixes() {
     }
 
     return $threadprefix;
+}
+
+// Profilfelder säubern
+function character_manager_clean_html($html) {
+
+    libxml_use_internal_errors(true);
+    $doc = new DOMDocument();
+    
+    $html = '<?xml encoding="UTF-8"><!DOCTYPE html><html><body>' . $html . '</body></html>';
+    
+    $doc->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    $clean = $doc->saveHTML($doc->getElementsByTagName('body')->item(0));
+    
+    libxml_clear_errors();
+    
+    return $clean;
 }
 
 // CHARAKTERIDEE POST BAUEN
