@@ -903,9 +903,9 @@ function character_manager_usercp() {
 
             // Leer laufen lassen
             $avatarUrl = "";
-            $characternameFormated = "";
+            $characternameFormatted = "";
             $characternameLink = ""; 
-            $characternameFormatedLink = "";
+            $characternameFormattedLink = "";
             $characternameFirst = "";
             $characternameLast = "";
             $exportLink = "";
@@ -925,11 +925,11 @@ function character_manager_usercp() {
 
             // CHARACTER NAME
             // Nur Gruppenfarbe
-            $characternameFormated = format_name($charactername, $character['usergroup'], $character['displaygroup']);	
+            $characternameFormatted = format_name($charactername, $character['usergroup'], $character['displaygroup']);	
             // Nur Link
             $characternameLink = build_profile_link($charactername, $characterUID);
             // mit Gruppenfarbe + Link
-            $characternameFormatedLink = build_profile_link(format_name($charactername, $character['usergroup'], $character['displaygroup']), $characterUID);	
+            $characternameFormattedLink = build_profile_link(format_name($charactername, $character['usergroup'], $character['displaygroup']), $characterUID);	
             // Name gesplittet
             $fullname = explode(" ", $charactername);
             $characternameFirst = array_shift($fullname);
@@ -2478,7 +2478,7 @@ function character_manager_templates($mode = '') {
         'title'		=> 'charactermanager_character',
         'template'	=> $db->escape_string('<div class="character_manager_character">	
         <div class="character_manager_username">
-		{$characternameFormatedLink}
+		{$characternameFormattedLink}
         </div>
         <div class="character_manager_avatar">
 		<img src="{$avatarUrl}">
