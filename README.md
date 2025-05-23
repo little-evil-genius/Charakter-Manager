@@ -33,7 +33,7 @@ Da die UID des Charakters als Grundlage dient, kann der PDF-Download-Link prinzi
 
 ### Charakterideen verwalten und veröffentlichen
 Im User-CP steht optional ein Tool zur Verfügung, in dem User:innen neue Charakterideen speichern und verwalten können. Diese Funktion dient als Notizsystem und kann vom Team individuell angepasst werden. Im Admin-CP lassen sich dazu eigene Felder definieren, z.B. für Avatarperson, Alter.<br>
-Das Tool bietet eine Erinnerungsfunktion: User:innen können nach einer bestimmten Anzahl von Tagen automatisch an ihre gespeicherte Idee erinnern werden. Diese Erinnerungszeit wird im Admin-CP festgelegt und gilt für alle Ideen einheitlich.
+Das Tool bietet eine Erinnerungsfunktion: User:innen können nach einer bestimmten Anzahl von Tagen automatisch an ihre gespeicherte Idee erinnern werden. Diese Erinnerungszeit wird im Admin-CP festgelegt und gilt für alle Ideen einheitlich.<br>
 Nach Ablauf der Frist erhalten die User:innen einen Hinweisbanner, mit der Möglichkeit, die jeweilige Idee entweder zu löschen - falls kein Interesse mehr besteht - oder die Erinnerung um denselben Zeitraum zu verlängern. So behalten User:innen den Überblick über ihre geplanten Charakterkonzepte und können bei Bedarf aktiv entscheiden, welche Ideen sie weiterverfolgen möchten.<br>
 Jede Idee kann entweder privat für den User:in gespeichert oder - sofern aktiviert - als Thema im Forum veröffentlicht werden. Die Veröffentlichung erfolgt auf Basis eines Templates. So entsteht ein einheitlicher Beitrag, ohne dass die User:innen HTML oder BBCode schreiben müssen.
 
