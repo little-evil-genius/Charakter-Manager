@@ -1335,7 +1335,7 @@ function character_manager_usercp() {
             "email" => $mainChara['email'],
             "email2" => $mainChara['email'],
 			"usergroup" => $usergroup,
-			"referrer" => $mainChara['referrer'],
+			"referrer" => 0,
 			"timezone" => $mainChara['timezone'],
 			"language" => $mainChara['language'],
             "regip" => $session->packedip,
