@@ -175,7 +175,7 @@ usercp.php?action=character_manager<br>
 usercp.php?action=character_manager_registration<br>
 <br>
 <b>PDF</b><br>
-usercp.php?action=character_manager_pdf<br>
+usercp.php?action=character_manager_pdf&uid=X<br>
 <br>
 
 # Demo
