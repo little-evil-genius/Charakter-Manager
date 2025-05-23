@@ -93,7 +93,7 @@ Das Plugin ist kompatibel mit den klassischen Profilfeldern von MyBB und/oder de
 - header: {$character_manager_banner}
 - member_profile: {$character_manager_exportLink}
 
-# Neues CSS - inplayqscenes.css
+# Neues CSS - character_manager.css
 Es wird automatisch in jedes bestehende und neue Design hinzugefügt. Man sollte es einfach einmal abspeichern - auch im Default. Nach einem MyBB Upgrade fehlt der Stylesheets im Masterstyle? Im ACP Modul "RPG Erweiterungen" befindet sich der Menüpunkt "Stylesheets überprüfen" und kann von hinterlegten Plugins den Stylesheet wieder hinzufügen.
 ```css
 .character_manager {
