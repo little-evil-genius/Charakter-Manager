@@ -19,9 +19,9 @@ if(!defined("IN_MYBB"))
 	die("Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.");
 }
 
-// ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 // HOOKS
 $plugins->add_hook("admin_config_settings_change", "character_manager_settings_change");
@@ -939,18 +939,18 @@ function character_manager_usercp() {
             if ($db->table_exists("application_ucp_fields")) {
                 if (!function_exists('application_ucp_build_view')) {
                     require_once MYBB_ROOT . 'inc/plugins/application_ucp.php';
+                    $applicationfields = application_ucp_build_view($characterUID, "profile", "array");
+                    $character = array_merge($character, $applicationfields);
                 }
-                $applicationfields = application_ucp_build_view($characterUID, "profile", "array");
-                $character = array_merge($character, $applicationfields);
             }
 
             // Uploadsystem
             if ($db->table_exists("uploadsystem")) {
                 if (!function_exists('uploadsystem_build_view')) {
                     require_once MYBB_ROOT . 'inc/plugins/uploadsystem.php';
+                    $uploadfields = uploadsystem_build_view($characterUID);
+                    $character = array_merge($character, $uploadfields);
                 }
-                $uploadfields = uploadsystem_build_view($characterUID);
-                $character = array_merge($character, $uploadfields);
             }
 
             // Exportieren
@@ -1356,20 +1356,22 @@ function character_manager_usercp() {
             $required_fields = str_replace(", ", ",", $mybb->settings['character_manager_required_fields']);
             $required_fields = explode(",", $required_fields);
 
-            foreach ($required_fields as $requiredfield) {
-                if (is_numeric($requiredfield)) {
-                    $inputfield = $mybb->get_input('profile_fields', MyBB::INPUT_ARRAY); 
-                    $fieldname = $db->fetch_field($db->simple_select("profilefields", "name", "fid = '".$requiredfield."'"), "name");
+            if (!empty($required_fields)) {
+                foreach ($required_fields as $requiredfield) {
+                    if (is_numeric($requiredfield)) {
+                        $inputfield = $mybb->get_input('profile_fields', MyBB::INPUT_ARRAY); 
+                        $fieldname = $db->fetch_field($db->simple_select("profilefields", "name", "fid = '".$requiredfield."'"), "name");
                     
-                    if (empty($inputfield['fid'.$requiredfield])) {
-                        $errors[] = $lang->sprintf($lang->character_manager_error_fields, $fieldname);  
-                    }
-                } else {
-                    $inputfield = $mybb->get_input('application_fields', MyBB::INPUT_ARRAY);
-                    $fieldname = $db->fetch_field($db->simple_select("application_ucp_fields", "label", "fieldname = '".$requiredfield."'"), "label");
+                        if (empty($inputfield['fid'.$requiredfield])) {
+                            $errors[] = $lang->sprintf($lang->character_manager_error_fields, $fieldname);  
+                        }
+                    } else {
+                        $inputfield = $mybb->get_input('application_fields', MyBB::INPUT_ARRAY);
+                        $fieldname = $db->fetch_field($db->simple_select("application_ucp_fields", "label", "fieldname = '".$requiredfield."'"), "label");
                     
-                    if (empty($inputfield[$requiredfield])) {
-                        $errors[] = $lang->sprintf($lang->character_manager_error_fields, $fieldname);   
+                        if (empty($inputfield[$requiredfield])) {
+                            $errors[] = $lang->sprintf($lang->character_manager_error_fields, $fieldname);   
+                        }
                     }
                 }
             }
@@ -1454,6 +1456,8 @@ function character_manager_usercp() {
         }
         $required_fields = array_map('trim', $required_fields);
         $adopt_fields = array_map('trim', $adopt_fields);
+        $required_fields = array_filter($required_fields, fn($v) => $v !== '');
+        $adopt_fields = array_filter($adopt_fields, fn($v) => $v !== '');
 
         foreach ($requiredprofilefields as $fid) {
             if (!in_array($fid, $required_fields) && !in_array($fid, $adopt_fields)) {
@@ -1484,7 +1488,7 @@ function character_manager_usercp() {
         if ($adopt_setting == 1) {
 
             $adoptfields = "";
-            if (empty($required_fields)) {
+            if (empty($adopt_fields)) {
                 $displayadoptfields = 'style="display: none;"';
             } else {
                 foreach($adopt_fields as $adoptfield) {
