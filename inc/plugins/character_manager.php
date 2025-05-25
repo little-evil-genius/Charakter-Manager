@@ -2914,5 +2914,7 @@ function character_manager_is_updated(){
 
     if (!$template) {
         return false;
-    }
+    } 
+    
+    return true;
 }
