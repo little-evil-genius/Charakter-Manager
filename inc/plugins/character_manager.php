@@ -1715,7 +1715,7 @@ function character_manager_global() {
     if ($reminder_day == 0) return;
     if ($mybb->user['uid'] == 0) return;
 
-    $allCharas = inplayscenes_get_allchars($mybb->user['uid']);
+    $allCharas = character_manager_get_allchars($mybb->user['uid']);
     $allUids = implode(",",array_keys($allCharas));
 
     $today = new DateTime();
