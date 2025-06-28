@@ -2078,6 +2078,10 @@ function character_manager_generate_input_field($identification, $type, $mode = 
             $input = '<textarea name="'.htmlspecialchars($identification).'" rows="6" cols="42" '.$unchangeable.'>' . htmlspecialchars($value) . '</textarea>';
             break;
 
+	case 'url':
+            $input = '<input type="url" class="textbox" size="40" name="'.htmlspecialchars($identification).'" value="' . htmlspecialchars($value) . '">';
+            break;
+
         case 'radio':
             foreach ($expoptions as $option) {
                 $checked = ($option == $value) ? ' checked' : '';
