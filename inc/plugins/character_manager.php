@@ -48,7 +48,7 @@ function character_manager_info(){
 		"website"	=> "https://github.com/little-evil-genius/Charakter-Manager",
 		"author"	=> "little.evil.genius",
 		"authorsite"	=> "https://storming-gates.de/member.php?action=profile&uid=1712",
-		"version"	=> "1.0",
+		"version"	=> "1.0.1",
 		"compatibility" => "18*"
 	);
 }
@@ -914,6 +914,9 @@ function character_manager_usercp() {
             $character = get_user($characterUID);
             $userfields_query = $db->simple_select("userfields", "*", "ufid = ".$characterUID);
             $userfields = $db->fetch_array($userfields_query);
+            if (!is_array($userfields)) {
+                $userfields = [];
+            }
             $character = array_merge($character, $userfields);
 
             // Avatar
@@ -940,6 +943,9 @@ function character_manager_usercp() {
                 if (!function_exists('application_ucp_build_view')) {
                     require_once MYBB_ROOT . 'inc/plugins/application_ucp.php';
                     $applicationfields = application_ucp_build_view($characterUID, "profile", "array");
+                    if (!is_array($applicationfields)) {
+                        $applicationfields = [];
+                    }
                     $character = array_merge($character, $applicationfields);
                 }
             }
@@ -949,6 +955,9 @@ function character_manager_usercp() {
                 if (!function_exists('uploadsystem_build_view')) {
                     require_once MYBB_ROOT . 'inc/plugins/uploadsystem.php';
                     $uploadfields = uploadsystem_build_view($characterUID);
+                    if (!is_array($uploadfields)) {
+                        $uploadfields = [];
+                    }
                     $character = array_merge($character, $uploadfields);
                 }
             }
