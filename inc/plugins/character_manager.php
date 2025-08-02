@@ -848,7 +848,10 @@ function character_manager_admin_update_plugin(&$table) {
                 $table_status = $db->fetch_array($query);
                 $actual_collation = strtolower($table_status['Collation'] ?? '');
 
-                if (!empty($collation) && $actual_collation !== strtolower($collation)) {
+                $actual_collation = str_replace(['utf8mb3', 'utf8mb4'], 'utf8', $actual_collation);
+                $expected_collation = str_replace(['utf8mb3', 'utf8mb4'], 'utf8', $collation);
+
+                if (!empty($collation) && $actual_collation !== $expected_collation) {
                     $db->query("ALTER TABLE {$table} CONVERT TO CHARACTER SET {$charset} COLLATE {$collation}");
                 }
             }
@@ -2948,12 +2951,11 @@ function character_manager_stylesheet_update() {
 }
 
 // UPDATE CHECK
-function character_manager_is_updated(){
-
+function character_manager_is_updated() {
     global $db;
 
-    $charset = 'utf8mb4';
-    $collation = 'utf8mb4_unicode_ci';
+    $charset = 'utf8';
+    $collation = 'utf8_general_ci';
 
     $collation_string = $db->build_create_table_collation();
     if (preg_match('/CHARACTER SET ([^\s]+)\s+COLLATE ([^\s]+)/i', $collation_string, $matches)) {
@@ -2976,12 +2978,16 @@ function character_manager_is_updated(){
         $query = $db->query("
             SELECT TABLE_COLLATION 
             FROM information_schema.TABLES 
-            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '".$db->escape_string($full_table_name)."'
+            WHERE LOWER(TABLE_SCHEMA) = LOWER(DATABASE()) 
+              AND TABLE_NAME = '".$db->escape_string($full_table_name)."'
         ");
         $result = $db->fetch_array($query);
-        $actual_collation = strtolower($result['TABLE_COLLATION'] ?? '');
+        $actual_collation = strtolower(trim($result['TABLE_COLLATION'] ?? ''));
+        
+        $actual_collation = str_replace(['utf8mb3', 'utf8mb4'], 'utf8', $actual_collation);
+        $expected_collation = str_replace(['utf8mb3', 'utf8mb4'], 'utf8', $collation);
 
-        if ($actual_collation !== $collation) {
+        if ($actual_collation !== $expected_collation) {
             return false;
         }
     }
