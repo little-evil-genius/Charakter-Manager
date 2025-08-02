@@ -2305,7 +2305,7 @@ function character_manager_database() {
             PRIMARY KEY(`cfid`),
             KEY `cfid` (`cfid`)
             )
-            ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci AUTO_INCREMENT=1
+            ENGINE=InnoDB ".$db->build_create_table_collation().";
         ");
     }
     
@@ -2319,7 +2319,7 @@ function character_manager_database() {
             PRIMARY KEY(`cid`),
             KEY `cid` (`cid`)
             )
-            ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=1
+            ENGINE=InnoDB ".$db->build_create_table_collation().";
         ");
     }
 
