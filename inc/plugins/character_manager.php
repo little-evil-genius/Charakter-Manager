@@ -2962,9 +2962,8 @@ function character_manager_is_updated(){
     }
 
     $databaseTables = [
-        "application_manager",
-        "application_checklist_groups",
-        "application_checklist_fields"
+        "character_manager_fields",
+        "character_manager"
     ];
 
     foreach ($databaseTables as $table_name) {
