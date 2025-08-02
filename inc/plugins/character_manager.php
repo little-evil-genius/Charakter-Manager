@@ -848,8 +848,8 @@ function character_manager_admin_update_plugin(&$table) {
                 $table_status = $db->fetch_array($query);
                 $actual_collation = strtolower($table_status['Collation'] ?? '');
 
-                $actual_collation = str_replace(['utf8mb3', 'utf8mb4'], 'utf8', $actual_collation);
-                $expected_collation = str_replace(['utf8mb3', 'utf8mb4'], 'utf8', $collation);
+                $actual_collation = str_replace('utf8mb3', 'utf8', $actual_collation);
+                $expected_collation = str_replace('utf8mb3', 'utf8', $collation);
 
                 if (!empty($collation) && $actual_collation !== $expected_collation) {
                     $db->query("ALTER TABLE {$table} CONVERT TO CHARACTER SET {$charset} COLLATE {$collation}");
@@ -2984,8 +2984,8 @@ function character_manager_is_updated() {
         $result = $db->fetch_array($query);
         $actual_collation = strtolower(trim($result['TABLE_COLLATION'] ?? ''));
         
-        $actual_collation = str_replace(['utf8mb3', 'utf8mb4'], 'utf8', $actual_collation);
-        $expected_collation = str_replace(['utf8mb3', 'utf8mb4'], 'utf8', $collation);
+        $actual_collation = str_replace('utf8mb3', 'utf8', $actual_collation);
+        $expected_collation = str_replace('utf8mb3', 'utf8', $collation);
 
         if ($actual_collation !== $expected_collation) {
             return false;
@@ -2994,3 +2994,4 @@ function character_manager_is_updated() {
 
     return true;
 }
+
